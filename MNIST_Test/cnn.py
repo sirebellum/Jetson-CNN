@@ -7,7 +7,8 @@ import numpy as np
 import tensorflow as tf
 from cnn_mnist import cnn_model_fn
 
-tf.logging.set_verbosity(tf.logging.INFO)
+tf.logging.set_verbosity(tf.logging.WARN)
+#DEBUG, INFO, WARN, ERROR, or FATAL
 
 # Our application logic will be added here
 
