@@ -28,9 +28,16 @@ def main(unused_argv):
   train_data = mnist.train.images # Returns np.array
   train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
   
+  # Estimator config to change frequency of ckpt files
+  my_checkpointing_config = tf.estimator.RunConfig(
+    save_checkpoints_secs = 20,  # Save checkpoints every 20 seconds.
+    keep_checkpoint_max = 5,)       # Retain the 5 most recent checkpoints.
+  
   # Create the Estimator
   mnist_classifier = tf.estimator.Estimator(
-    model_fn=cnn_model_fn, model_dir=CWD_PATH+"/models/"+args.output_name)
+    model_fn=cnn_model_fn,
+    model_dir=CWD_PATH+"/models/"+args.output_name,
+    config=my_checkpointing_config )
     
   # Set up logging for predictions
   tensors_to_log = {"probabilities": "softmax_tensor"}
@@ -44,7 +51,6 @@ def main(unused_argv):
     batch_size=100,
     num_epochs=None,
     shuffle=True)
-
   mnist_classifier.train(
     input_fn=train_input_fn,
     steps=20000,
