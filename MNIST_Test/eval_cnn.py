@@ -6,11 +6,12 @@ from __future__ import print_function
 import numpy as np
 import os
 import argparse
+import inotify.adapters
 import tensorflow as tf
 from cnn_mnist import cnn_model_fn
 
-tf.logging.set_verbosity(tf.logging.WARN)
 #DEBUG, INFO, WARN, ERROR, or FATAL
+tf.logging.set_verbosity(tf.logging.WARN)
 
 #Argument parsing
 parser = argparse.ArgumentParser()
@@ -18,6 +19,11 @@ parser.add_argument("output_name", help="Specify model output name")
 args = parser.parse_args()
 
 CWD_PATH = os.getcwd()
+model_path = CWD_PATH+"/models/"+args.output_name
+
+#Inotify setup
+file_watch = inotify.adapters.Inotify()
+file_watch.add_watch(model_path)
 
 def main(unused_argv):
 
@@ -28,15 +34,18 @@ def main(unused_argv):
   
   # Create the Estimator
   mnist_classifier = tf.estimator.Estimator(
-    model_fn=cnn_model_fn, model_dir=CWD_PATH+"/models/"+args.output_name)
-
-  while True: #Evaluate forever
-     # Evaluate the model and print results
-      eval_input_fn = tf.estimator.inputs.numpy_input_fn(
+    model_fn=cnn_model_fn, model_dir=model_path)
+    
+  eval_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"x": eval_data},
         y=eval_labels,
         num_epochs=1,
         shuffle=False)
+
+  for event in file_watch.event_gen(yield_nones=False): #Evaluate for every new file
+    # Evaluate the model and print results
+    (_, type_names, path, filename) = event
+    if type_names[0] is 'IN_MOVED_TO' and 'checkpoint' in filename and 'tmp' not in filename:
       eval_results = mnist_classifier.evaluate(input_fn=eval_input_fn)
       print(eval_results)
   
