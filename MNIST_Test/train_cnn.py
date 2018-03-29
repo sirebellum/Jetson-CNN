@@ -7,7 +7,8 @@ import numpy as np
 import os
 import argparse
 import tensorflow as tf
-from cnn_mnist import cnn_model_fn
+from cnn_mnist import cnn_model_fn, cnn_model_5x1
+cnn_model = cnn_model_5x1 #which model to use
 
 tf.logging.set_verbosity(tf.logging.WARN)
 #DEBUG, INFO, WARN, ERROR, or FATAL
@@ -35,7 +36,7 @@ def main(unused_argv):
   
   # Create the Estimator
   mnist_classifier = tf.estimator.Estimator(
-    model_fn=cnn_model_fn,
+    model_fn=cnn_model,
     model_dir=CWD_PATH+"/models/"+args.output_name,
     config=my_checkpointing_config )
     

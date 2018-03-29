@@ -8,7 +8,8 @@ import os
 import argparse
 import inotify.adapters
 import tensorflow as tf
-from cnn_mnist import cnn_model_fn
+from cnn_mnist import cnn_model_fn, cnn_model_5x1
+cnn_model = cnn_model_5x1 #which model to use
 
 #DEBUG, INFO, WARN, ERROR, or FATAL
 tf.logging.set_verbosity(tf.logging.WARN)
@@ -34,7 +35,7 @@ def main(unused_argv):
   
   # Create the Estimator
   mnist_classifier = tf.estimator.Estimator(
-    model_fn=cnn_model_fn, model_dir=model_path)
+    model_fn=cnn_model, model_dir=model_path)
     
   eval_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"x": eval_data},
