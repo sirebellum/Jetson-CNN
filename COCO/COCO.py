@@ -50,6 +50,7 @@ class dataset:
         
     def nextImages(self, numObjects): #return aprox. numObjects warped and cropped objects
         
+        print("loading images into memory...")
         images = list()
         labels = list()
         for x in range(self.numImages, len(self.imgIds)):
