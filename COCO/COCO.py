@@ -74,7 +74,7 @@ class dataset:
             
           self.numImages = self.numImages + 1
           
-          if len(images) >= numObjects:
+          if len(images) >= numObjects and numObjects != -1: #Get all objects if numObjects -1
             print(len(images), "objects warped")
             break
           
