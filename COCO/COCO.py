@@ -16,6 +16,12 @@ def draw_boxes(boxes, frame):
 
     return frame
 
+def crop_and_warp(image, box): #crop and warp image to box then 32x32
+    cropped = image[ int(box[1]):int(box[1]+box[3]),
+                     int(box[0]):int(box[0]+box[2]) ]
+    warped = cv2.resize(cropped, (32, 32))
+    return warped
+    
 # initialize COCO api for instance annotations
 valData='val2017'
 trainData='train2017'
@@ -53,8 +59,6 @@ for imgId in imgIds:
   
   #Crop and warp
   for box in boxes:
-    cropped = image[ int(box[1]):int(box[1]+box[3]),
-                     int(box[0]):int(box[0]+box[2]) ]
-    warped = cv2.resize(cropped, (32, 32))
+    warped = crop_and_warp(image, box)
     cv2.imshow('warped', warped)
     cv2.waitKey(0)
