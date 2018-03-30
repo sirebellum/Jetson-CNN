@@ -43,7 +43,6 @@ class dataset:
         # get all images containing given categories (nms)
         self.catIds = self.coco_handle.getCatIds(catNms=nms)
         self.imgIds = self.coco_handle.getImgIds()
-        
         self.numImages = 0 #number of processed images
         
         print(len(self.imgIds), "total images in", data, "set.")
@@ -70,7 +69,7 @@ class dataset:
           boxes = list()
           for ann in anns: #get bounding boxes
             boxes.append(ann['bbox'])
-            labels.append(ann['category_id'])
+            labels.append(labeled(ann['category_id']))
             images.append(crop_and_warp(image, ann['bbox']))
             
           self.numImages = self.numImages + 1
@@ -82,3 +81,16 @@ class dataset:
         print(len(self.imgIds) - self.numImages, "images left.")
           
         return np.asarray(images), np.asarray(labels, dtype=np.int32)
+
+
+def labeled(id): #normalize labels to fit within 80
+    if id == 81: return 12
+    elif id == 82: return 26
+    elif id == 84: return 30
+    elif id == 85: return 45
+    elif id == 86: return 66
+    elif id == 87: return 68
+    elif id == 88: return 69
+    elif id == 89: return 71
+    elif id == 90: return 29
+    else: return id
