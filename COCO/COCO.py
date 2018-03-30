@@ -79,4 +79,4 @@ class dataset:
           
         print(len(self.imgIds) - self.numImages, "images left.")
           
-        return images
+        return images, labels
