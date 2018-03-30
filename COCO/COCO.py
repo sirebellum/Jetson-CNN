@@ -73,6 +73,15 @@ class dataset:
         labels = list()
         for x in range(self.numImages, len(self.imgIds)):
           for thread in range(0, self.num_threads):
+
+            if x+thread >= len(self.imgIds): #if no more images,
+                for i in range(0, thread):  #purge queues and break
+                    images = images + self.queue[i].get()
+                    labels = labels + self.queue[i].get()
+                    print("No more images!")
+                    print(len(images), "objects warped")
+                    return np.asarray(images), np.asarray(labels, dtype=np.int32)
+            
             #Retrieve image location
             img = self.coco_handle.loadImgs(self.imgIds[x+thread])[0] #image descriptor
             image_location = self.imageDir+self.dataType+'/'+img['file_name']
