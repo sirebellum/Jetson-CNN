@@ -26,8 +26,9 @@ CWD_PATH = os.getcwd()
 def main(unused_argv):
 
   # Load training and eval data
+  num_objects = 50000 #Number of objects to retrieve at a time
   trainDataset = COCO.COCO.dataset('train')
-  train_data, train_labels = trainDataset.nextImages(100000)
+  train_data, train_labels = (1, 1)
 
   # Estimator config to change frequency of ckpt files
   my_checkpointing_config = tf.estimator.RunConfig(
@@ -46,16 +47,19 @@ def main(unused_argv):
       tensors=tensors_to_log, every_n_iter=50)
       
   # Train the model
-  train_input_fn = tf.estimator.inputs.numpy_input_fn(
-    x={"x": train_data},
-    y=train_labels,
-    batch_size=256,
-    num_epochs=None,
-    shuffle=True)
-  classifier.train(
-    input_fn=train_input_fn,
-    steps=200000,
-    hooks=[logging_hook])
+  while len(train_data) > 0:
+      train_data, train_labels = trainDataset.nextImages(num_objects) #load next set
+      train_input_fn = tf.estimator.inputs.numpy_input_fn(
+        x={"x": train_data},
+        y=train_labels,
+        batch_size=256,
+        num_epochs=None,
+        shuffle=True)
+      classifier.train(
+        input_fn=train_input_fn,
+        max_steps=200000,
+        steps=20000,
+        hooks=[logging_hook])
 
 if __name__ == "__main__":
   tf.app.run()
