@@ -13,7 +13,6 @@ def draw_boxes(boxes, frame):
                              (int(box[0]+box[2]), int(box[1]+box[3])),
                              (255,255,0),
                              2)
-
     return frame
 
 def crop_and_warp(image, box): #crop and warp image to box then 32x32
@@ -21,44 +20,58 @@ def crop_and_warp(image, box): #crop and warp image to box then 32x32
                      int(box[0]):int(box[0]+box[2]) ]
     warped = cv2.resize(cropped, (32, 32))
     return warped
+
+class dataset:
+
+    def __init__(self, data):
     
-# initialize COCO api for instance annotations
-valData='val2017'
-trainData='train2017'
-dataType = valData
-annFile='annotations/instances_{}.json'.format(dataType)
+        if data == 'train': self.dataType = 'train2017'
+        elif data == 'test': self.dataType = 'val2017'
+        else: exit("invalid datatype (shoudl be test or train)")
+    
+        # initialize COCO api for instance annotations
+        annFile='annotations/instances_{}.json'.format(self.dataType)
+        self.imageDir = 'images/'
 
-imageDir = 'images/'
+        self.coco_handle=coco.COCO(annFile)
 
-coco_handle=coco.COCO(annFile)
+        # human-readable COCO categories
+        cats = self.coco_handle.loadCats(self.coco_handle.getCatIds())
+        nms=[cat['name'] for cat in cats]
 
-# human-readable COCO categories
-cats = coco_handle.loadCats(coco_handle.getCatIds())
-nms=[cat['name'] for cat in cats]
+        # get all images containing given categories (nms)
+        self.catIds = self.coco_handle.getCatIds(catNms=nms)
+        self.imgIds = self.coco_handle.getImgIds()
+        
+        self.numImages = 0 #number of processed images
+        
+    def nextImages(self, numObjects): #return aprox. numObjects warped and cropped objects
+        
+        images = list()
+        labels = list()
+        for x in range(self.numImages, len(self.imgIds)):
 
-# get all images containing given categories (nms)
-catIds = coco_handle.getCatIds(catNms=nms)
-imgIds = coco_handle.getImgIds()
-
-images = list()
-labels = list()
-for imgId in imgIds:
-
-  #Retrieve image
-  img = coco_handle.loadImgs(imgId)[0] #image descriptor
-  image_location = imageDir+dataType+'/'+img['file_name']
-  image = cv2.imread(image_location) #actual image
-  image = np.divide(image, 255.0) #Normalize to [0,1]
-  
-  #Retrieve bounding boxes
-  annIds = coco_handle.getAnnIds(imgIds=imgId, catIds=catIds, iscrowd=None)
-  anns = coco_handle.loadAnns(annIds) #annotation data
-  boxes = list()
-  for ann in anns: #get bounding boxes
-    boxes.append(ann['bbox'])
-  
-  #Crop and warp
-  for box in boxes:
-    warped = crop_and_warp(image, box)
-    cv2.imshow('warped', warped)
-    cv2.waitKey(0)
+          #Retrieve image
+          img = self.coco_handle.loadImgs(self.imgIds[x])[0] #image descriptor
+          image_location = self.imageDir+self.dataType+'/'+img['file_name']
+          image = cv2.imread(image_location) #actual image
+          image = np.divide(image, 255.0) #Normalize to [0,1]
+          
+          #Retrieve bounding boxes and warp images
+          annIds = self.coco_handle.getAnnIds(imgIds=self.imgIds[x],
+                                              catIds=self.catIds,
+                                              iscrowd=None)
+          anns = self.coco_handle.loadAnns(annIds) #annotation data
+          boxes = list()
+          for ann in anns: #get bounding boxes
+            boxes.append(ann['bbox'])
+            labels.append(ann['category_id'])
+            images.append(crop_and_warp(image, ann['bbox']))
+            
+          self.numImages = self.numImages + 1
+          
+          if len(images) >= numObjects:
+            print(len(images), "objects warped")
+            break
+          
+        return images
