@@ -4,6 +4,7 @@ import skimage.io as io
 import cv2
 from functions import draw_boxes
 import matplotlib.pyplot as plt
+import math
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 def draw_boxes(boxes, frame):
@@ -16,8 +17,8 @@ def draw_boxes(boxes, frame):
     return frame
 
 def crop_and_warp(image, box): #crop and warp image to box then 32x32
-    cropped = image[ int(box[1]):int(box[1]+box[3]),
-                     int(box[0]):int(box[0]+box[2]) ]
+    cropped = image[ math.floor(box[1]):math.ceil(box[1]+box[3]),
+                     math.floor(box[0]):math.ceil(box[0]+box[2]) ]
     warped = cv2.resize(cropped, (32, 32))
     return warped
 
@@ -44,6 +45,8 @@ class dataset:
         self.imgIds = self.coco_handle.getImgIds()
         
         self.numImages = 0 #number of processed images
+        
+        print(len(self.imgIds), "total images in", data, "set.")
         
     def nextImages(self, numObjects): #return aprox. numObjects warped and cropped objects
         
@@ -73,5 +76,7 @@ class dataset:
           if len(images) >= numObjects:
             print(len(images), "objects warped")
             break
+          
+        print(len(self.imgIds) - self.numImages, "images left.")
           
         return images
