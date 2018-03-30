@@ -5,6 +5,7 @@ import cv2
 from functions import draw_boxes
 import matplotlib.pyplot as plt
 import math
+from multiprocessing import Process, Queue
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 def draw_boxes(boxes, frame):
@@ -29,7 +30,24 @@ class dataset:
         if data == 'train': self.dataType = 'train2017'
         elif data == 'test': self.dataType = 'val2017'
         else: exit("invalid datatype (shoudl be test or train)")
-    
+
+        #Multithreading
+        self.num_threads = 4
+        #Create an output and input queue for each thread
+        self.queue = list()
+        self.queuein = list()
+        for x in range(0, self.num_threads):
+            self.queue.append(Queue())
+            self.queuein.append(Queue())
+        #Initialize Threads
+        self.thread = list()
+        for x in range(0, self.num_threads):
+            self.thread.append(Process(target=parseImage,
+                               args=(self.queuein[x],
+                                     self.queue[x],),
+                               daemon = True))
+            self.thread[x].start()
+        
         # initialize COCO api for instance annotations
         annFile='COCO/annotations/instances_{}.json'.format(self.dataType)
         self.imageDir = 'COCO/images/'
@@ -46,6 +64,7 @@ class dataset:
         self.numImages = 0 #number of processed images
         
         print(len(self.imgIds), "total images in", data, "set.")
+
         
     def nextImages(self, numObjects): #return aprox. numObjects warped and cropped objects
         
@@ -53,35 +72,51 @@ class dataset:
         images = list()
         labels = list()
         for x in range(self.numImages, len(self.imgIds)):
-
-          #Retrieve image
-          img = self.coco_handle.loadImgs(self.imgIds[x])[0] #image descriptor
-          image_location = self.imageDir+self.dataType+'/'+img['file_name']
-          image = cv2.imread(image_location) #actual image
-          image = image.astype(np.float32)
-          image = np.divide(image, 255.0) #Normalize to [0,1]
+          for thread in range(0, self.num_threads):
+            #Retrieve image location
+            img = self.coco_handle.loadImgs(self.imgIds[x+thread])[0] #image descriptor
+            image_location = self.imageDir+self.dataType+'/'+img['file_name']
+            #Retrieve annotations
+            annIds = self.coco_handle.getAnnIds(imgIds=self.imgIds[x+thread],
+                                                catIds=self.catIds,
+                                                iscrowd=None)
+            anns = self.coco_handle.loadAnns(annIds) #annotation data
+            #Execute thread
+            self.queuein[thread].put(image_location)
+            self.queuein[thread].put(anns)
           
-          #Retrieve bounding boxes and warp images
-          annIds = self.coco_handle.getAnnIds(imgIds=self.imgIds[x],
-                                              catIds=self.catIds,
-                                              iscrowd=None)
-          anns = self.coco_handle.loadAnns(annIds) #annotation data
-          boxes = list()
-          for ann in anns: #get bounding boxes
-            boxes.append(ann['bbox'])
-            labels.append(labeled(ann['category_id']))
-            images.append(crop_and_warp(image, ann['bbox']))
-            
-          self.numImages = self.numImages + 1
+          for queue in self.queue:
+            images = images + queue.get()
+            labels = labels + queue.get()
+          
+          self.numImages = self.numImages + self.num_threads
           
           if len(images) >= numObjects and numObjects != -1: #Get all objects if numObjects -1
             print(len(images), "objects warped")
             break
-          
+        
+        
         print(len(self.imgIds) - self.numImages, "images left.")
           
         return np.asarray(images), np.asarray(labels, dtype=np.int32)
 
+def parseImage(qin, q):
+  while True:
+    file = qin.get()
+    annotations = qin.get()
+    image = cv2.imread(file) #actual image
+    image = image.astype(np.float32)
+    image = np.divide(image, 255.0) #Normalize to [0,1]
+    
+    labels = list()
+    images = list()
+    for ann in annotations: #get bounding boxes
+      labels.append(labeled(ann['category_id']))
+      images.append(crop_and_warp(image, ann['bbox']))
+      
+    q.put(images)
+    q.put(labels)
+        
 
 def labeled(id): #normalize labels to fit within 80
     if id == 81: return 12
