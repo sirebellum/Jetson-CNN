@@ -31,8 +31,8 @@ class dataset:
         else: exit("invalid datatype (shoudl be test or train)")
     
         # initialize COCO api for instance annotations
-        annFile='annotations/instances_{}.json'.format(self.dataType)
-        self.imageDir = 'images/'
+        annFile='COCO/annotations/instances_{}.json'.format(self.dataType)
+        self.imageDir = 'COCO/images/'
 
         self.coco_handle=coco.COCO(annFile)
 
