@@ -19,7 +19,7 @@ def draw_boxes(boxes, frame):
 def crop_and_warp(image, box): #crop and warp image to box then 32x32
     cropped = image[ math.floor(box[1]):math.ceil(box[1]+box[3]),
                      math.floor(box[0]):math.ceil(box[0]+box[2]) ]
-    warped = cv2.resize(cropped, (32, 32))
+    warped = cv2.resize(cropped, (28, 28))
     return warped
 
 class dataset:
@@ -59,6 +59,7 @@ class dataset:
           img = self.coco_handle.loadImgs(self.imgIds[x])[0] #image descriptor
           image_location = self.imageDir+self.dataType+'/'+img['file_name']
           image = cv2.imread(image_location) #actual image
+          image = image.astype(np.float32)
           image = np.divide(image, 255.0) #Normalize to [0,1]
           
           #Retrieve bounding boxes and warp images
@@ -80,4 +81,4 @@ class dataset:
           
         print(len(self.imgIds) - self.numImages, "images left.")
           
-        return images, labels
+        return np.asarray(images), np.asarray(labels, dtype=np.int32)
