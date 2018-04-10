@@ -1,1 +1,12 @@
 Convolution Neural Network used for classifying images (car or not car)
+
+Uses COCO dataset and cocoapi for a custom dataset class (COCO/COCO.py) that returns a fixed number of objects and labels cropped and warped from COCO dataset.
+
+MNIST_Test serves as springboard. Tutorial from Tensorflow website.
+
+Usage:
+  Training: python3 train_cnn.py [output name]
+  Eval: python3 eval_cnn.py [model name]
+  
+  *[output name] is arbitrary. Will be the name of the folder written to in models/
+  *[model name] refers to the [output name] used in training
