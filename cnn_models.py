@@ -1,39 +1,57 @@
 import tensorflow as tf
 
-def cnn_model_5x1(features, labels, mode):
+def CNN_Model(features, labels, mode):
   """Model function for CNN."""
   # Input Layer
-  input_layer = tf.reshape(features["x"], [-1, 28, 28, 3])
+  input_layer = tf.reshape(features["x"], [-1, 225, 225, 3])
 
   # Convolutional Layer #1
-  conv0_5 = tf.layers.conv2d(
-      inputs=input_layer,
-      filters=6,
-      kernel_size=[1, 5],
-      padding="same",
-      activation=tf.nn.relu)
   conv1 = tf.layers.conv2d(
-      inputs=conv0_5,
-      filters=6,
-      kernel_size=[5, 1],
-      padding="same",
+      inputs=input_layer,
+      filters=96,
+      kernel_size=[11, 11],
+      strides=(4, 4),
+      padding="valid",
       activation=tf.nn.relu)
-
-  # Pooling Layer #1
-  pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2)
-
-  # Convolutional Layer #2 and Pooling Layer #2
+  
+  pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[3, 3], strides=2)
+  
   conv2 = tf.layers.conv2d(
       inputs=pool1,
-      filters=64,
+      filters=256,
       kernel_size=[5, 5],
-      padding="same",
+      strides=(1, 1),
+      padding="valid",
       activation=tf.nn.relu)
-  pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2)
-
+      
+  pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[3, 3], strides=2)
+  
+  conv3 = tf.layers.conv2d(
+      inputs=pool2,
+      filters=384,
+      kernel_size=[3, 3],
+      strides=(1, 1),
+      padding="valid",
+      activation=tf.nn.relu)
+  conv4 = tf.layers.conv2d(
+      inputs=conv3,
+      filters=384,
+      kernel_size=[3, 3],
+      strides=(1, 1),
+      padding="valid",
+      activation=tf.nn.relu)
+  conv5 = tf.layers.conv2d(
+      inputs=conv4,
+      filters=256,
+      kernel_size=[3, 3],
+      strides=(1, 1),
+      padding="valid",
+      activation=tf.nn.relu)
+      
   # Dense Layer
-  pool2_flat = tf.reshape(pool2, [-1, 7 * 7 * 64])
-  dense = tf.layers.dense(inputs=pool2_flat, units=1024, activation=tf.nn.relu)
+  _, height, width, depth = conv5.get_shape()
+  conv5_flat = tf.reshape(conv5, [-1, height * width * depth])
+  dense = tf.layers.dense(inputs=conv5_flat, units=2048, activation=tf.nn.relu)
   dropout = tf.layers.dropout(
       inputs=dense, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
 

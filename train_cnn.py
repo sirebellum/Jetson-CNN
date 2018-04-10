@@ -8,8 +8,8 @@ import numpy as np
 import os
 import argparse
 import tensorflow as tf
-from cnn_models import cnn_model_5x1
-cnn_model = cnn_model_5x1 #which model to use
+from cnn_models import CNN_Model
+cnn_model = CNN_Model #which model to use
 
 tf.logging.set_verbosity(tf.logging.WARN)
 #DEBUG, INFO, WARN, ERROR, or FATAL
@@ -26,7 +26,7 @@ CWD_PATH = os.getcwd()
 def main(unused_argv):
 
   # Load training and eval data
-  num_objects = 50000 #Number of objects to retrieve at a time
+  num_objects = 2000 #Number of objects to retrieve at a time
   trainDataset = COCO.COCO.dataset('train')
   train_data, train_labels = ([1], [1])
 
@@ -57,7 +57,7 @@ def main(unused_argv):
         shuffle=True)
       classifier.train(
         input_fn=train_input_fn,
-        steps=20000,
+        steps=2000,
         hooks=[logging_hook])
 
 if __name__ == "__main__":

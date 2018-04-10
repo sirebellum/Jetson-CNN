@@ -20,7 +20,7 @@ def draw_boxes(boxes, frame):
 def crop_and_warp(image, box): #crop and warp image to box then 32x32
     cropped = image[ math.floor(box[1]):math.ceil(box[1]+box[3]),
                      math.floor(box[0]):math.ceil(box[0]+box[2]) ]
-    warped = cv2.resize(cropped, (28, 28))
+    warped = cv2.resize(cropped, (225, 225))
     return warped
 
 class dataset:

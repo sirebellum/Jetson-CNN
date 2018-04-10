@@ -9,8 +9,8 @@ import os
 import argparse
 import inotify.adapters
 import tensorflow as tf
-from cnn_models import cnn_model_5x1
-cnn_model = cnn_model_5x1 #which model to use
+from cnn_models import CNN_Model
+cnn_model = CNN_Model #which model to use
 
 #DEBUG, INFO, WARN, ERROR, or FATAL
 tf.logging.set_verbosity(tf.logging.WARN)
