@@ -5,3 +5,4 @@ MNIST_Test/models/*
 models/*
 COCO/images/*
 COCO/annotations/*
+COCO/*.record
