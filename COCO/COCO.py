@@ -1,26 +1,16 @@
 from pycocotools import coco
 import numpy as np
-import skimage.io as io
 import cv2
-from functions import draw_boxes
-import matplotlib.pyplot as plt
 import math
 from multiprocessing import Process, Queue
-
-font = cv2.FONT_HERSHEY_SIMPLEX
-def draw_boxes(boxes, frame):
-    for box in boxes:
-        frame = cv2.rectangle(frame,
-                             (int(box[0]), int(box[1])),
-                             (int(box[0]+box[2]), int(box[1]+box[3])),
-                             (255,255,0),
-                             2)
-    return frame
+import tensorflow as tf
 
 def crop_and_warp(image, box): #crop and warp image to box then 32x32
     cropped = image[ math.floor(box[1]):math.ceil(box[1]+box[3]),
                      math.floor(box[0]):math.ceil(box[0]+box[2]) ]
     warped = cv2.resize(cropped, (225, 225))
+    warped = cv2.cvtColor(warped, cv2.COLOR_BGR2RGB)
+    warped = warped.astype(np.float32)
     return warped
 
 class dataset:
@@ -49,8 +39,8 @@ class dataset:
             self.thread[x].start()
         
         # initialize COCO api for instance annotations
-        annFile='COCO/annotations/instances_{}.json'.format(self.dataType)
-        self.imageDir = 'COCO/images/'
+        annFile='./annotations/instances_{}.json'.format(self.dataType)
+        self.imageDir = './images/'
 
         self.coco_handle=coco.COCO(annFile)
 
@@ -80,7 +70,7 @@ class dataset:
                     labels = labels + self.queue[i].get()
                     print("No more images!")
                     print(len(images), "objects warped")
-                    return np.asarray(images), np.asarray(labels, dtype=np.int32)
+                    return images, np.asarray(labels, dtype=np.int64)
             
             #Retrieve image location
             img = self.coco_handle.loadImgs(self.imgIds[x+thread])[0] #image descriptor
@@ -95,8 +85,10 @@ class dataset:
             self.queuein[thread].put(anns)
           
           for queue in self.queue:
-            images = images + queue.get()
-            labels = labels + queue.get()
+            image_queue = queue.get()
+            images = images + image_queue
+            label_queue = queue.get()
+            labels = labels + label_queue
           
           self.numImages = self.numImages + self.num_threads
           
@@ -107,21 +99,22 @@ class dataset:
         
         print(len(self.imgIds) - self.numImages, "images left.")
           
-        return np.asarray(images), np.asarray(labels, dtype=np.int32)
+        return images, np.asarray(labels, dtype=np.int64)
 
 def parseImage(qin, q):
   while True:
     file = qin.get()
     annotations = qin.get()
     image = cv2.imread(file) #actual image
-    image = image.astype(np.float32)
-    image = np.divide(image, 255.0) #Normalize to [0,1]
+    if image is None: exit("No image!")
     
     labels = list()
     images = list()
     for ann in annotations: #get bounding boxes
       labels.append(labeled(ann['category_id']))
-      images.append(crop_and_warp(image, ann['bbox']))
+      object = crop_and_warp(image, ann['bbox'])
+      raw_object = tf.compat.as_bytes(object.tostring())
+      images.append(raw_object)
       
     q.put(images)
     q.put(labels)

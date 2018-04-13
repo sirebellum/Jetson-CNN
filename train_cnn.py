@@ -21,14 +21,48 @@ args = parser.parse_args()
 
 CWD_PATH = os.getcwd()
 
+def parser(serialized_example):
+  """Parses a single tf.Example into image and label tensors."""
+  feature = {'image/height': tf.FixedLenFeature([], tf.int64),
+             'image/width':  tf.FixedLenFeature([], tf.int64),
+             'image/encoded': tf.FixedLenFeature([], tf.string),
+             'image/format':  tf.FixedLenFeature([], tf.string),
+             'image/object/class/label': tf.FixedLenFeature([], tf.int64),}
+  features = tf.parse_single_example(
+      serialized_example,
+      features=feature)
+  image = tf.decode_raw(features['image/encoded'], tf.float32)
+  print("image:", image)
+  image = tf.reshape(image, [225, 225, 3])
+  label = tf.cast(features['image/object/class/label'], tf.int32)
+  return (image, label)
+
+# Define the input function for training
+def train_input_fn():
+
+  # Keep list of filenames, so you can input directory of tfrecords easily
+  train_filenames = ["COCO/train.record"]
+  test_filenames = ["COCO/test.record"]
+  batch_size=256
+
+  # Import data
+  dataset = tf.data.TFRecordDataset(train_filenames)
+
+  # Map the parser over dataset, and batch results by up to batch_size
+  dataset = dataset.map(parser)
+  dataset = dataset.batch(batch_size)
+  dataset = dataset.repeat()
+  print(dataset.output_shapes, ":::", dataset.output_types)
+  iterator = dataset.make_one_shot_iterator()
+
+  features, labels = iterator.get_next()
+  print(features)
+
+  return (features, labels)
+
 # Our application logic will be added here
 
 def main(unused_argv):
-
-  # Load training and eval data
-  num_objects = 2000 #Number of objects to retrieve at a time
-  trainDataset = COCO.COCO.dataset('train')
-  train_data, train_labels = ([1], [1])
 
   # Estimator config to change frequency of ckpt files
   my_checkpointing_config = tf.estimator.RunConfig(
@@ -47,17 +81,9 @@ def main(unused_argv):
       tensors=tensors_to_log, every_n_iter=50)
       
   # Train the model
-  while len(train_data) > 0:
-      train_data, train_labels = trainDataset.nextImages(num_objects) #load next set
-      train_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x={"x": train_data},
-        y=train_labels,
-        batch_size=256,
-        num_epochs=None,
-        shuffle=True)
-      classifier.train(
+  classifier.train(
         input_fn=train_input_fn,
-        steps=2000,
+        steps=20000,
         hooks=[logging_hook])
 
 if __name__ == "__main__":

@@ -3,7 +3,7 @@ import tensorflow as tf
 def CNN_Model(features, labels, mode):
   """Model function for CNN."""
   # Input Layer
-  input_layer = tf.reshape(features["x"], [-1, 225, 225, 3])
+  input_layer = features
 
   # Convolutional Layer #1
   conv1 = tf.layers.conv2d(
