@@ -23,18 +23,19 @@ CWD_PATH = os.getcwd()
 
 def parser(serialized_example):
   """Parses a single tf.Example into image and label tensors."""
-  feature = {'image/height': tf.FixedLenFeature([], tf.int64),
-             'image/width':  tf.FixedLenFeature([], tf.int64),
-             'image/encoded': tf.FixedLenFeature([], tf.string),
+  features = {'image/encoded': tf.FixedLenFeature([], tf.string),
              'image/format':  tf.FixedLenFeature([], tf.string),
-             'image/object/class/label': tf.FixedLenFeature([], tf.int64),}
-  features = tf.parse_single_example(
-      serialized_example,
-      features=feature)
-  image = tf.decode_raw(features['image/encoded'], tf.float32)
-  print("image:", image)
+             'image/label':   tf.FixedLenFeature([], tf.int64)}
+  features = tf.parse_single_example(serialized_example, features)
+  
+  #print("JPG:", features['image/encoded'])
+  image = tf.image.decode_jpeg(features['image/encoded'], channels=0)
+  image = tf.cast(image, tf.float32) #Change from uint8 to float for compatibility with reshape
+  #print("image:", image)
   image = tf.reshape(image, [225, 225, 3])
-  label = tf.cast(features['image/object/class/label'], tf.int32)
+  
+  label = tf.cast(features['image/label'], tf.int32)
+  
   return (image, label)
 
 # Define the input function for training
@@ -52,11 +53,11 @@ def train_input_fn():
   dataset = dataset.map(parser)
   dataset = dataset.batch(batch_size)
   dataset = dataset.repeat()
-  print(dataset.output_shapes, ":::", dataset.output_types)
+  #print("Dataset:", dataset.output_shapes, ":::", dataset.output_types)
   iterator = dataset.make_one_shot_iterator()
 
   features, labels = iterator.get_next()
-  print(features)
+  #print("Iterator:", features)
 
   return (features, labels)
 

@@ -96,7 +96,6 @@ class dataset:
             print(len(images), "objects warped")
             break
         
-        
         print(len(self.imgIds) - self.numImages, "images left.")
           
         return images, np.asarray(labels, dtype=np.int64)
@@ -113,8 +112,8 @@ def parseImage(qin, q):
     for ann in annotations: #get bounding boxes
       labels.append(labeled(ann['category_id']))
       object = crop_and_warp(image, ann['bbox'])
-      raw_object = tf.compat.as_bytes(object.tostring())
-      images.append(raw_object)
+      encoded_object = cv2.imencode(".jpg", object)[1].tostring()
+      images.append(encoded_object)
       
     q.put(images)
     q.put(labels)
