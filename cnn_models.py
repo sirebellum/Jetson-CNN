@@ -50,7 +50,7 @@ def CNN_Model(features, labels, mode):
       
   # Dense Layer
   _, height, width, depth = conv5.get_shape()
-  print("Training CNN with final feature maps:", height, "x", width, "x", depth)
+  print("CNN with final feature maps:", height, "x", width, "x", depth)
   conv5_flat = tf.reshape(conv5, [-1, height * width * depth])
   dense = tf.layers.dense(inputs=conv5_flat, units=2048, activation=tf.nn.relu)
   dropout = tf.layers.dropout(
@@ -89,3 +89,68 @@ def CNN_Model(features, labels, mode):
           labels=labels, predictions=predictions["classes"])}
   return tf.estimator.EstimatorSpec(
       mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+
+def parse_record(serialized_example): #parse a single binary example
+  """Parses a single tf.Example into image and label tensors."""
+  features = {'image/encoded': tf.FixedLenFeature([], tf.string),
+             'image/format':  tf.FixedLenFeature([], tf.string),
+             'image/label':   tf.FixedLenFeature([], tf.int64)}
+  features = tf.parse_single_example(serialized_example, features)
+  
+  #print("JPG:", features['image/encoded'])
+  image = tf.image.decode_jpeg(features['image/encoded'], channels=0)
+  image = tf.cast(image, tf.float32) #Change from uint8 to float for compatibility with reshape
+  #print("image:", image)
+  image = tf.reshape(image, [225, 225, 3])
+  
+  label = tf.cast(features['image/label'], tf.int32)
+  
+  return (image, label)
+  
+# Define the input function for training
+def train_input_fn():
+
+  # Keep list of filenames, so you can input directory of tfrecords easily
+  train_filenames = ["COCO/train.record"]
+  test_filenames = ["COCO/test.record"]
+  batch_size=256
+
+  # Import data
+  dataset = tf.data.TFRecordDataset(train_filenames)
+
+  # Map the parser over dataset, and batch results by up to batch_size
+  dataset = dataset.map(parse_record)
+  dataset = dataset.batch(batch_size)
+  dataset = dataset.repeat()
+  #print("Dataset:", dataset.output_shapes, ":::", dataset.output_types)
+  iterator = dataset.make_one_shot_iterator()
+
+  features, labels = iterator.get_next()
+  #print("Iterator:", features)
+
+  return (features, labels)
+
+# Our application logic will be added here
+
+# Define the input function for evaluating
+def eval_input_fn():
+
+  # Keep list of filenames, so you can input directory of tfrecords easily
+  train_filenames = ["COCO/train.record"]
+  test_filenames = ["COCO/test.record"]
+  batch_size = 1
+
+  # Import data
+  dataset = tf.data.TFRecordDataset(test_filenames)
+
+  # Map the parser over dataset, and batch results by up to batch_size
+  dataset = dataset.map(parse_record)
+  dataset = dataset.batch(batch_size)
+  dataset = dataset.repeat()
+  #print("Dataset:", dataset.output_shapes, ":::", dataset.output_types)
+  iterator = dataset.make_one_shot_iterator()
+
+  features, labels = iterator.get_next()
+  #print("Iterator:", features)
+
+  return (features, labels)
