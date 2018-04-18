@@ -50,6 +50,7 @@ def CNN_Model(features, labels, mode):
       
   # Dense Layer
   _, height, width, depth = conv5.get_shape()
+  print("Training CNN with final feature maps:", height, "x", width, "x", depth)
   conv5_flat = tf.reshape(conv5, [-1, height * width * depth])
   dense = tf.layers.dense(inputs=conv5_flat, units=2048, activation=tf.nn.relu)
   dropout = tf.layers.dropout(
