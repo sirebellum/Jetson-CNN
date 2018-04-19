@@ -64,12 +64,13 @@ class dataset:
           for thread in range(0, self.num_threads):
 
             if x+thread >= len(self.imgIds): #if no more images,
-                for i in range(0, thread):  #purge queues and break
-                    images = images + self.queue[i].get()
-                    labels = labels + self.queue[i].get()
-                    print("No more images!")
-                    print(len(images), "objects warped")
-                    return images, np.asarray(labels, dtype=np.int64)
+              for i in range(0, thread-1):  #purge queues and break
+                images = images + self.queue[i].get()
+                labels = labels + self.queue[i].get()
+              print("No more images!")
+              print(len(images), "objects warped")
+              self.numImages = self.numImages + thread - 1
+              return images, np.asarray(labels, dtype=np.int64)
             
             #Retrieve image location
             img = self.coco_handle.loadImgs(self.imgIds[x+thread])[0] #image descriptor
@@ -104,6 +105,8 @@ def parseImage(qin, q):
     file = qin.get()
     annotations = qin.get()
     image = cv2.imread(file) #actual image
+    #cv2.imshow("image", image)
+    #cv2.waitKey(1)
     if image is None: exit("No image!")
     
     labels = list()
