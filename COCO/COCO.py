@@ -10,7 +10,6 @@ def crop_and_warp(image, box): #crop and warp image to box then 32x32
                      math.floor(box[0]):math.ceil(box[0]+box[2]) ]
     warped = cv2.resize(cropped, (225, 225))
     warped = cv2.cvtColor(warped, cv2.COLOR_BGR2RGB)
-    warped = warped.astype(np.float32)
     return warped
 
 class dataset:
@@ -110,11 +109,19 @@ def parseImage(qin, q):
     labels = list()
     images = list()
     for ann in annotations: #get bounding boxes
-      labels.append(labeled(ann['category_id']))
       object = crop_and_warp(image, ann['bbox'])
-      encoded_object = cv2.imencode(".jpg", object)[1].tostring()
-      images.append(encoded_object)
       
+      if object.any(): #If not all zeroes
+        cv2.imshow("object", object)
+        cv2.waitKey(1)
+        encoded_object = cv2.imencode(".jpg", object)[1].tostring()
+        images.append(encoded_object)
+        labels.append(labeled(ann['category_id']))
+        
+      else:
+        cv2.imshow("suckage", object)
+        cv2.waitKey(1)
+
     q.put(images)
     q.put(labels)
         
