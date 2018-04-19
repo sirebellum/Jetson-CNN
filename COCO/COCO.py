@@ -112,15 +112,15 @@ def parseImage(qin, q):
       object = crop_and_warp(image, ann['bbox'])
       
       if object.any(): #If not all zeroes
-        cv2.imshow("object", object)
-        cv2.waitKey(1)
+        #cv2.imshow("object", object)
+        #cv2.waitKey(1)
         encoded_object = cv2.imencode(".jpg", object)[1].tostring()
         images.append(encoded_object)
         labels.append(labeled(ann['category_id']))
         
-      else:
-        cv2.imshow("suckage", object)
-        cv2.waitKey(1)
+      #else:
+        #cv2.imshow("suckage", object)
+        #cv2.waitKey(1)
 
     q.put(images)
     q.put(labels)
