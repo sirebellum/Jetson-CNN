@@ -60,7 +60,7 @@ class dataset:
         print("loading images into memory...")
         images = list()
         labels = list()
-        for x in range(self.numImages, len(self.imgIds)):
+        for x in range(self.numImages, len(self.imgIds), self.num_threads):
           for thread in range(0, self.num_threads):
 
             if x+thread >= len(self.imgIds): #if no more images,
