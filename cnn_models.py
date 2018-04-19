@@ -3,6 +3,7 @@ import tensorflow as tf
 def CNN_Model(features, labels, mode):
   """Model function for CNN."""
   # Input Layer
+  print("Mode:", mode)
   input_layer = features
 
   # Convolutional Layer #1
@@ -77,7 +78,7 @@ def CNN_Model(features, labels, mode):
 
   # Configure the Training Op (for TRAIN mode)
   if mode == tf.estimator.ModeKeys.TRAIN:
-    optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.00001)
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001)
     train_op = optimizer.minimize(
         loss=loss,
         global_step=tf.train.get_global_step())
@@ -99,9 +100,9 @@ def parse_record(serialized_example): #parse a single binary example
   
   #print("JPG:", features['image/encoded'])
   image = tf.image.decode_jpeg(features['image/encoded'], channels=0)
-  image = tf.cast(image, tf.float32) #Change from uint8 to float for compatibility with reshape
   #print("image:", image)
   image = tf.reshape(image, [225, 225, 3])
+  image = tf.image.convert_image_dtype(image, tf.float32)
   
   label = tf.cast(features['image/label'], tf.int32)
   
@@ -146,7 +147,6 @@ def eval_input_fn():
   # Map the parser over dataset, and batch results by up to batch_size
   dataset = dataset.map(parse_record)
   dataset = dataset.batch(batch_size)
-  dataset = dataset.repeat()
   #print("Dataset:", dataset.output_shapes, ":::", dataset.output_types)
   iterator = dataset.make_one_shot_iterator()
 
