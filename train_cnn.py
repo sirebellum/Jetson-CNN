@@ -22,14 +22,10 @@ CWD_PATH = os.getcwd()
 
 def main(unused_argv):
 
-  config = tf.ConfigProto()
-  config.gpu_options.per_process_gpu_memory_fraction = 0.45
-
   # Estimator config to change frequency of ckpt files
   estimator_config = tf.estimator.RunConfig(
     save_checkpoints_secs = 20,  # Save checkpoints every 20 seconds.
-    keep_checkpoint_max = 5,
-    session_config=config)       # Retain the 5 most recent checkpoints.
+    keep_checkpoint_max = 5)       # Retain the 5 most recent checkpoints.
   
   # Create the Estimator
   classifier = tf.estimator.Estimator(

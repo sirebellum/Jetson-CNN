@@ -34,18 +34,10 @@ file_watch.add_watch(model_path)
 
 def main(unused_argv):
 
-  config = tf.ConfigProto()
-  config.gpu_options.per_process_gpu_memory_fraction = 0.45
-
-    # Estimator config to change frequency of ckpt files
-  estimator_config = tf.estimator.RunConfig(
-    session_config=config)       # Retain the 5 most recent checkpoints.
-
   # Create the Estimator
   classifier = tf.estimator.Estimator(
     model_fn=cnn_model,
-    model_dir=model_path,
-    config=estimator_config)
+    model_dir=model_path)
 
   for event in file_watch.event_gen(yield_nones=False): #Evaluate for every new file
     # Evaluate the model and print results
