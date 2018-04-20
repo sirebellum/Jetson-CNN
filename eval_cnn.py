@@ -16,13 +16,17 @@ tf.logging.set_verbosity(tf.logging.WARN)
 
 #Argument parsing
 parser = argparse.ArgumentParser()
-parser.add_argument("output_name", help="Specify path to model")
-parser.add_argument("eval_imm", default=0, help="Evaluate the most recent checkpoint")
+parser.add_argument("output_name", help="Relative path to model")
+parser.add_argument("--eval_imm", default=0, help="Evaluate the most recent checkpoint")
 args = parser.parse_args()
 
 CWD_PATH = os.getcwd()
 if "models" and "/" not in args.output_name:
   model_path = CWD_PATH+"/models/"+args.output_name
+
+else: model_path = CWD_PATH+"/"+args.output_name
+
+print("Evaluating model at", model_path)
 
 #Inotify setup
 file_watch = inotify.adapters.Inotify()
@@ -30,9 +34,18 @@ file_watch.add_watch(model_path)
 
 def main(unused_argv):
 
+  config = tf.ConfigProto()
+  config.gpu_options.per_process_gpu_memory_fraction = 0.45
+
+    # Estimator config to change frequency of ckpt files
+  estimator_config = tf.estimator.RunConfig(
+    session_config=config)       # Retain the 5 most recent checkpoints.
+
   # Create the Estimator
   classifier = tf.estimator.Estimator(
-    model_fn=cnn_model, model_dir=model_path)
+    model_fn=cnn_model,
+    model_dir=model_path,
+    config=estimator_config)
 
   for event in file_watch.event_gen(yield_nones=False): #Evaluate for every new file
     # Evaluate the model and print results
