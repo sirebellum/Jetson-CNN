@@ -139,7 +139,7 @@ def eval_input_fn():
   # Keep list of filenames, so you can input directory of tfrecords easily
   train_filenames = ["COCO/train.record"]
   test_filenames = ["COCO/test.record"]
-  batch_size = 1
+  batch_size = 24
 
   # Import data
   dataset = tf.data.TFRecordDataset(test_filenames)
