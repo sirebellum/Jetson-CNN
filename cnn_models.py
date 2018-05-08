@@ -1,6 +1,6 @@
 import tensorflow as tf
 
-def CNN_Model(features, labels, mode):
+def ResNet(features, labels, mode):
   """Model function for CNN."""
   # Input Layer
   print("Mode:", mode)
@@ -48,12 +48,18 @@ def CNN_Model(features, labels, mode):
       strides=(1, 1),
       padding="valid",
       activation=tf.nn.relu)
-      
-  # Dense Layer
-  _, height, width, depth = conv5.get_shape()
+
+  
+  return conv5
+
+def CNN_Model(features, labels, mode):
+
+  final_layer = ResNet(features, labels, mode)
+  _, height, width, depth = final_layer.get_shape()
   print("CNN with final feature maps:", height, "x", width, "x", depth)
-  conv5_flat = tf.reshape(conv5, [-1, height * width * depth])
-  dense = tf.layers.dense(inputs=conv5_flat, units=2048, activation=tf.nn.relu)
+
+  final_flat = tf.reshape(final_layer, [-1, height * width * depth])
+  dense = tf.layers.dense(inputs=final_flat, units=2048, activation=tf.nn.relu)
   dropout = tf.layers.dropout(
       inputs=dense, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
 
