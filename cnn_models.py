@@ -1,4 +1,5 @@
 import tensorflow as tf
+from inception_v2 import inception_v2
 
 def ResNet(features, labels, mode):
   """Model function for CNN."""
@@ -54,7 +55,15 @@ def ResNet(features, labels, mode):
 
 def CNN_Model(features, labels, mode):
 
-  final_layer = ResNet(features, labels, mode)
+  #final_layer = ResNet(features, labels, mode)
+  final_layer, _ = inception_v2.inception_v2_base(features,
+                      final_endpoint='Mixed_5b',
+                      min_depth=16,
+                      depth_multiplier=1.0,
+                      use_separable_conv=True,
+                      data_format='NHWC',
+                      scope=None)
+  
   _, height, width, depth = final_layer.get_shape()
   print("CNN with final feature maps:", height, "x", width, "x", depth)
 
@@ -118,8 +127,8 @@ def parse_record(serialized_example): #parse a single binary example
 def train_input_fn():
 
   # Keep list of filenames, so you can input directory of tfrecords easily
-  train_filenames = ["COCO/train.record"]
-  test_filenames = ["COCO/test.record"]
+  train_filenames = ["/home/joshua/COCO/train.record"]
+  test_filenames = ["/home/joshua/COCO/test.record"]
   batch_size=256
 
   # Import data
