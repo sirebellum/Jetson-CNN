@@ -3,6 +3,7 @@ __pycache__
 MNIST_Test/MNIST-data
 MNIST_Test/models/*
 models/*
+COCO/images
 COCO/images/*
 COCO/annotations/*
 COCO/*.record
