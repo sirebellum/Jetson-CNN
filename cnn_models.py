@@ -5,7 +5,7 @@ def ResNet(features, labels, mode):
   """Model function for CNN."""
   # Input Layer
   print("Mode:", mode)
-  input_layer = features
+  input_layer = tf.reshape(features, [-1, 225, 225, 3], name="image_input")
 
   # Convolutional Layer #1
   conv1 = tf.layers.conv2d(
@@ -55,14 +55,14 @@ def ResNet(features, labels, mode):
 
 def CNN_Model(features, labels, mode):
 
-  #final_layer = ResNet(features, labels, mode)
-  final_layer, _ = inception_v2.inception_v2_base(features,
-                      final_endpoint='Mixed_5b',
-                      min_depth=16,
-                      depth_multiplier=1.0,
-                      use_separable_conv=True,
-                      data_format='NHWC',
-                      scope=None)
+  final_layer = ResNet(features, labels, mode)
+  #final_layer, _ = inception_v2.inception_v2_base(features,
+  #                    final_endpoint='Mixed_5b',
+  #                    min_depth=16,
+  #                    depth_multiplier=0.5,
+  #                    use_separable_conv=True,
+  #                    data_format='NHWC',
+  #                    scope=None)
   
   _, height, width, depth = final_layer.get_shape()
   print("CNN with final feature maps:", height, "x", width, "x", depth)
@@ -127,8 +127,8 @@ def parse_record(serialized_example): #parse a single binary example
 def train_input_fn():
 
   # Keep list of filenames, so you can input directory of tfrecords easily
-  train_filenames = ["/home/joshua/COCO/train.record"]
-  test_filenames = ["/home/joshua/COCO/test.record"]
+  train_filenames = ["COCO/images/train.record"]
+  test_filenames = ["COCO/images/test.record"]
   batch_size=256
 
   # Import data
@@ -152,8 +152,8 @@ def train_input_fn():
 def eval_input_fn():
 
   # Keep list of filenames, so you can input directory of tfrecords easily
-  train_filenames = ["COCO/train.record"]
-  test_filenames = ["COCO/test.record"]
+  train_filenames = ["COCO/images/train.record"]
+  test_filenames = ["COCO/images/test.record"]
   batch_size = 24
 
   # Import data
