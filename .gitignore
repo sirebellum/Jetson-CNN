@@ -7,3 +7,4 @@ COCO/images
 COCO/images/*
 COCO/annotations/*
 COCO/*.record
+*.log
