@@ -37,6 +37,7 @@ class receiverNetwork:
         image_compressed = data[0] #get img
         image_numpy = np.fromstring(image_compressed, dtype=np.uint8)
         image = cv2.imdecode(image_numpy, cv2.IMREAD_UNCHANGED) #uncompress
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB) #tensorflow expectations
         image = cv2.normalize(image.astype('float'), None, 0.0, 1.0, cv2.NORM_MINMAX)
         
         boxes = pickle.loads(data[1]) #unpickle boxes
