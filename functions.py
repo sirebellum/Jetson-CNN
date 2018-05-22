@@ -51,15 +51,25 @@ def visualize(boxes, frame, scores, classes, labels):
 def parse_predictions(predictions):
 
     scores = list()
+    classes = list()
     for p in predictions:
-        classes = p["classes"]
+        class_batch = p["classes"]
+        classes.append(class_batch.tolist())
+        
         probs = p["probabilities"] #includes scores for other classes
         i = 0
-        for prob in probs:
-            scores.append(prob[classes[i]])
+        for prob in probs: #retrieve score for decided class
+            class_id = class_batch[i]
+            scores.append(prob[class_id])
             i = i + 1
 
-    return classes, np.asarray(scores), probs
+    #Flatten
+    classes = [item for sublist in classes for item in sublist]
+    #Convert to numpy
+    classes = np.asarray(classes)
+    scores = np.asarray(scores)
+    
+    return classes, scores
     
 def get_labels():
 

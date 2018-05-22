@@ -49,7 +49,7 @@ def main(unused_argv):
           input_fn=pred_input_fn,
           yield_single_examples=False)
 
-      classes, scores, probs = parse_predictions(predictions)
+      classes, scores = parse_predictions(predictions)
       
       image = image*255 #Convert to value in [0,255] for vis
       image = image.astype(np.uint8)
