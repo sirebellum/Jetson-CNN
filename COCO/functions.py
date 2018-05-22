@@ -5,7 +5,6 @@ import pickle
 import numpy as np
 
 def draw_boxes(boxes, frame):
-
     frame2 = frame.copy()
 
     for box in boxes:
@@ -17,6 +16,38 @@ def draw_boxes(boxes, frame):
 
     return frame2
 
+def draw_labels(labels, classes, frame, boxes):
+    frame2 = frame.copy()
+    
+    i = 0
+    for id in classes:
+        frame2 = cv2.putText(frame2,
+                   labels[id]['name'],
+                   (boxes[i][0],boxes[i][1]-5),
+                   font,
+                   0.5,
+                   (255,255,255),
+                   1,
+                   cv2.LINE_AA)
+        i = i + 1
+
+    return frame2
+    
+def visualize(boxes, frame, scores, classes, labels):
+
+    good_boxes = list()
+    good_classes = list()
+    i = 0
+    for box in boxes:
+       if scores[i] >= 0.75:
+         good_boxes.append(box)
+         good_classes.append(classes[i])
+       i = i + 1
+    
+    image = draw_boxes(good_boxes, frame)
+    image = draw_labels(labels, good_classes, image, good_boxes)
+    return image
+    
 def parse_predictions(predictions):
 
     scores = list()
