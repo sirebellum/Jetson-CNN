@@ -17,6 +17,36 @@ def draw_boxes(boxes, frame):
 
     return frame2
 
+def parse_predictions(predictions):
+
+    scores = list()
+    for p in predictions:
+        classes = p["classes"]
+        probs = p["probabilities"] #includes scores for other classes
+        i = 0
+        for prob in probs:
+            scores.append(prob[classes[i]])
+            i = i + 1
+
+    return classes, np.asarray(scores), probs
+    
+def get_labels():
+
+    labels = list()
+    with open("COCO/labels.txt", 'r') as f:
+      line = f.readline()
+      while line:
+        id, name = line.split(",")
+        name = name.strip("\n")
+        labels.append({"id":int(id), "name":name})
+        line = f.readline()
+    
+    category_index = {}
+    for cat in labels:
+      category_index[cat['id']] = cat
+    
+    return category_index
+
 class receiverNetwork:
 
     def __init__(self, port):
