@@ -16,6 +16,7 @@ tf.logging.set_verbosity(tf.logging.WARN)
 #Argument parsing
 parser = argparse.ArgumentParser()
 parser.add_argument("model_name", help="Relative path to model")
+parser.add_argument("vis", help="Visualizations? y/n")
 args = parser.parse_args()
 model_path = args.model_name
 
@@ -51,12 +52,13 @@ def main(unused_argv):
 
       classes, scores = parse_predictions(predictions)
       
-      image = image*255 #Convert to value in [0,255] for vis
-      image = image.astype(np.uint8)
-      image = visualize(boxes, image, scores, classes, labels)
-          
-      cv2.imshow("Image", image)
-      cv2.waitKey(10)
+      if args.vis == 'y':
+          image = image*255 #Convert to value in [0,255] for vis
+          image = image.astype(np.uint8)
+          image = visualize(boxes, image, scores, classes, labels)
+              
+          cv2.imshow("Image", image)
+          cv2.waitKey(10)
   
 if __name__ == "__main__":
   tf.app.run()
