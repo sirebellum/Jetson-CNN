@@ -24,7 +24,7 @@ model_path = args.model_name
 
 
 #EDGEBOXES setup
-modelfile = "/home/joshua/gits/RPi-Edge/model.yml.gz"
+modelfile = "./model.yml.gz"
 print("Loading model...")
 edgeGenerator = cv2.ximgproc.createStructuredEdgeDetection(model = modelfile)
 boxGenerator = cv2.ximgproc.createEdgeBoxes(maxBoxes = 1000,
@@ -73,8 +73,8 @@ def main(unused_argv):
       classes, scores = parse_predictions(predictions) #predictions is a weird object
       
       mAP_paths = ["./mAP/", filename] #Path to mAP https://github.com/Cartucho/mAP
-      write_file(gt_classes, gt_boxes, mAP_paths, None) #write gt files
-      write_file(classes, boxes, mAP_paths, scores) #write predicted files
+      write_file(gt_classes, gt_boxes, mAP_paths, None, labels) #write gt files
+      write_file(classes, boxes, mAP_paths, scores, labels) #write predicted files
       
       if args.vis == 'y':
           image = image*255 #Convert to value in [0,255] for vis

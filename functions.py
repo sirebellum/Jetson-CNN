@@ -4,7 +4,7 @@ import socket
 import pickle
 import numpy as np
 
-def write_file(clazzes, boxes, paths, scores):
+def write_file(clazzes, boxes, paths, scores, labels):
 
     filename = paths[1].strip(".jpg")+".txt" #write txt not jpg
     mAP_path = paths[0]
@@ -17,12 +17,14 @@ def write_file(clazzes, boxes, paths, scores):
         i = 0
         if scores is None: #If a ground truth file
             for clazz in clazzes:
-                left = boxes[i][0]
-                top = boxes[i][1]
-                right = boxes[i][2]
-                bottom = boxes[i][3]
-                string = "{} {} {} {} {}".format(clazz, left, top, right, bottom)
+                left = int(boxes[i][0])
+                top = int(boxes[i][1])
+                right = int(boxes[i][2])
+                bottom = int(boxes[i][3])
+                name = labels[clazz]['name']
+                string = "{} {} {} {} {}\n".format(name, left, top, right, bottom)
                 f.write(string)
+                i = i + 1
         else: #If a predicted file
             for clazz in clazzes:
                 score = scores[i]
@@ -30,8 +32,10 @@ def write_file(clazzes, boxes, paths, scores):
                 top = boxes[i][1]
                 right = boxes[i][2]
                 bottom = boxes[i][3]
-                string = "{} {} {} {} {} {}".format(clazz, score, left, top, right, bottom)
+                name = labels[clazz]['name']
+                string = "{} {} {} {} {} {}\n".format(name, score, left, top, right, bottom)
                 f.write(string)
+                i = i + 1
 
 def draw_boxes(boxes, frame):
     frame2 = frame.copy()
