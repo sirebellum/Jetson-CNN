@@ -21,7 +21,7 @@ def write_file(clazzes, boxes, paths, scores, labels):
                 top = int(boxes[i][1])
                 right = int(boxes[i][2])
                 bottom = int(boxes[i][3])
-                name = labels[clazz]['name']
+                name = labels[clazz]['name'].replace(' ', '-') #replace for mAP
                 string = "{} {} {} {} {}\n".format(name, left, top, right, bottom)
                 f.write(string)
                 i = i + 1
