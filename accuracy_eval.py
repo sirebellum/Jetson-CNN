@@ -6,9 +6,9 @@ import tensorflow as tf
 from cnn_models import CNN_Model
 cnn_model = CNN_Model #which model to use
 import cv2
-from functions import receiverNetwork, draw_boxes, parse_predictions, get_labels, visualize
+from functions import receiverNetwork, draw_boxes, parse_predictions, get_labels, visualize, write_file
 from COCO.COCO import crop_and_warp
-from COCO.accuracy_test import dataset
+from COCO.COCOlite import dataset
 import visualization_utils as vis_utils #tensorflow provided vis tools
 import subprocess
 
@@ -42,10 +42,11 @@ def main(unused_argv):
     model_dir=model_path)
     
   labels = get_labels() #maps id to name
-  while True:
+  image = 1
+  while image is not None:
   
       #GroundTruth
-      image , gt_classes, gt_boxes = COCO.nextImage()
+      image , gt_classes, gt_boxes, filename = COCO.nextImage()
       #EdgeBoxes
       edgearray = edgeGenerator.detectEdges(image)
       orientationarray = edgeGenerator.computeOrientation(edgearray)
@@ -69,7 +70,11 @@ def main(unused_argv):
           input_fn=pred_input_fn,
           yield_single_examples=False)
 
-      classes, scores = parse_predictions(predictions)
+      classes, scores = parse_predictions(predictions) #predictions is a weird object
+      
+      mAP_paths = ["./mAP/", filename] #Path to mAP https://github.com/Cartucho/mAP
+      write_file(gt_classes, gt_boxes, mAP_paths, None) #write gt files
+      write_file(classes, boxes, mAP_paths, scores) #write predicted files
       
       if args.vis == 'y':
           image = image*255 #Convert to value in [0,255] for vis
