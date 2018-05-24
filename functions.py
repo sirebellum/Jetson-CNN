@@ -23,7 +23,7 @@ def draw_labels(labels, classes, frame, boxes):
     for id in classes:
         frame2 = cv2.putText(frame2,
                    labels[id]['name'],
-                   (boxes[i][0],boxes[i][1]-5),
+                   (int(boxes[i][0]),int(boxes[i][1]-5)),
                    font,
                    0.5,
                    (255,255,255),
@@ -39,7 +39,10 @@ def visualize(boxes, frame, scores, classes, labels):
     good_classes = list()
     i = 0
     for box in boxes:
-       if scores[i] >= 0.75:
+       if scores is None: #draw all if scores is None
+         good_boxes.append(box)
+         good_classes.append(classes[i])
+       elif scores[i] >= 0.75:
          good_boxes.append(box)
          good_classes.append(classes[i])
        i = i + 1
