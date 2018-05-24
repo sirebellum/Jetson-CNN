@@ -42,11 +42,9 @@ def main(unused_argv):
     model_dir=model_path)
     
   labels = get_labels() #maps id to name
-  image = 1
+  #GroundTruth
+  image , gt_classes, gt_boxes, filename = COCO.nextImage()
   while image is not None:
-  
-      #GroundTruth
-      image , gt_classes, gt_boxes, filename = COCO.nextImage()
 
       #EdgeBoxes
       edgearray = edgeGenerator.detectEdges(image)
@@ -87,6 +85,9 @@ def main(unused_argv):
               cv2.imshow("COCO", image_COCO)
               cv2.imshow("image", image)
               cv2.waitKey(1000)
+              
+      #GroundTruth
+      image , gt_classes, gt_boxes, filename = COCO.nextImage()
   
 if __name__ == "__main__":
   tf.app.run()
