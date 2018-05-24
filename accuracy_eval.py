@@ -47,12 +47,13 @@ def main(unused_argv):
   
       #GroundTruth
       image , gt_classes, gt_boxes, filename = COCO.nextImage()
+
       #EdgeBoxes
       edgearray = edgeGenerator.detectEdges(image)
       orientationarray = edgeGenerator.computeOrientation(edgearray)
       suppressed_edgearray = edgeGenerator.edgesNms(edgearray, orientationarray)
       boxes = boxGenerator.getBoundingBoxes(suppressed_edgearray, orientationarray)
-      
+
       #Create list of all objects, cropped and warped
       objects = list()
       for box in boxes:
@@ -60,31 +61,32 @@ def main(unused_argv):
           objects.append(object)
       samples = np.array(objects, dtype=np.float32)
       
-      #Input function with all objects in image
-      pred_input_fn = tf.estimator.inputs.numpy_input_fn(
-          x=samples,
-          num_epochs=1,
-          shuffle=False)
+      if len(boxes) > 0: #skip images with no boxes
+          #Input function with all objects in image
+          pred_input_fn = tf.estimator.inputs.numpy_input_fn(
+              x=samples,
+              num_epochs=1,
+              shuffle=False)
 
-      predictions = classifier.predict(
-          input_fn=pred_input_fn,
-          yield_single_examples=False)
+          predictions = classifier.predict(
+              input_fn=pred_input_fn,
+              yield_single_examples=False)
 
-      classes, scores = parse_predictions(predictions) #predictions is a weird object
-      
-      mAP_paths = ["./mAP/", filename] #Path to mAP https://github.com/Cartucho/mAP
-      write_file(gt_classes, gt_boxes, mAP_paths, None, labels) #write gt files
-      write_file(classes, boxes, mAP_paths, scores, labels) #write predicted files
-      
-      if args.vis == 'y':
-          image = image*255 #Convert to value in [0,255] for vis
-          image = image.astype(np.uint8)
-          image_COCO = visualize(gt_boxes, image, None, gt_classes, labels)
-          image = visualize(boxes, image, scores, classes, labels)
+          classes, scores = parse_predictions(predictions) #predictions is a weird object
+          
+          mAP_paths = ["./mAP/", filename] #Path to mAP https://github.com/Cartucho/mAP
+          write_file(gt_classes, gt_boxes, mAP_paths, None, labels) #write gt files
+          write_file(classes, boxes, mAP_paths, scores, labels) #write predicted files
+          
+          if args.vis == 'y':
+              image = image*255 #Convert to value in [0,255] for vis
+              image = image.astype(np.uint8)
+              image_COCO = visualize(gt_boxes, image, None, gt_classes, labels)
+              image = visualize(boxes, image, scores, classes, labels)
 
-          cv2.imshow("COCO", image_COCO)
-          cv2.imshow("image", image)
-          cv2.waitKey(10)
+              cv2.imshow("COCO", image_COCO)
+              cv2.imshow("image", image)
+              cv2.waitKey(1000)
   
 if __name__ == "__main__":
   tf.app.run()
