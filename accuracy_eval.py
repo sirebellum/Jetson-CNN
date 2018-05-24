@@ -43,13 +43,14 @@ def main(unused_argv):
     model_dir=model_path)
     
   labels = get_labels() #maps id to name
-  #GroundTruth
-  image , gt_classes, gt_boxes, filename = COCO.nextImage()
+
   
   total_time = 0
   total_execs = 0
   
   try:
+    #GroundTruth
+    image , gt_classes, gt_boxes, filename = COCO.nextImage()
     while image is not None:
       #EdgeBoxes
       edgearray = edgeGenerator.detectEdges(image)

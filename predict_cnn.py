@@ -34,10 +34,9 @@ def main(unused_argv):
   total_execs = 0
   
   try:
+      #get image and boxes from network
+      image, boxes = receiver.receiveBoxes()
       while True:
-          #get image and boxes from network
-          image, boxes = receiver.receiveBoxes()
-          
           b_time = time.time() #beginning time
           
           #Create list of all objects, cropped and warped
@@ -71,6 +70,9 @@ def main(unused_argv):
                   
               cv2.imshow("Image", image)
               cv2.waitKey(10)
+              
+          #get image and boxes from network
+          image, boxes = receiver.receiveBoxes()
               
   except KeyboardInterrupt:
       exit(total_time/total_execs)
