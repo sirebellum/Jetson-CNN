@@ -3,6 +3,15 @@ font = cv2.FONT_HERSHEY_SIMPLEX
 import socket
 import pickle
 import numpy as np
+import math
+
+def crop_and_warp(image, box): #crop and warp image to box then 32x32
+    cropped = image[ math.floor(box[1]):math.ceil(box[1]+box[3]),
+                     math.floor(box[0]):math.ceil(box[0]+box[2]) ]
+    warped = cv2.resize(cropped, (225, 225))
+    if not isinstance(warped[0][0][0], float): #freaks out if it's a float
+      warped = cv2.cvtColor(warped, cv2.COLOR_BGR2RGB)
+    return warped
 
 def write_file(clazzes, boxes, paths, scores, labels):
 
