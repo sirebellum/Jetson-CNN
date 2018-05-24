@@ -1,3 +1,6 @@
+### Returns 1 whole image and annotations instead of indididual objects ###
+
+
 from pycocotools import coco
 import numpy as np
 import cv2
