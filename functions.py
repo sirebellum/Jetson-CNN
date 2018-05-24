@@ -25,7 +25,7 @@ def write_file(clazzes, boxes, paths, scores, labels):
                 string = "{} {} {} {} {}\n".format(name, left, top, right, bottom)
                 f.write(string)
                 i = i + 1
-        else: #If a predicted file
+        elif scores[i] >= 0.0: #If score is above threshold
             for clazz in clazzes:
                 score = scores[i]
                 left = int(boxes[i][0])
@@ -36,6 +36,8 @@ def write_file(clazzes, boxes, paths, scores, labels):
                 string = "{} {} {} {} {} {}\n".format(name, score, left, top, right, bottom)
                 f.write(string)
                 i = i + 1
+        else:
+            i = i + 1
 
 def draw_boxes(boxes, frame):
     frame2 = frame.copy()
