@@ -51,8 +51,9 @@ class dataset:
         image = np.divide(image, 255.0)
         
         self.numImages = self.numImages + 1
+        print("{} images left...".format(self.totalImages - self.numImages))
           
-        return image, labels, boxes
+        return image, labels, boxes, img['file_name']
 
 def parseAnnotation(file, annotations):
 
