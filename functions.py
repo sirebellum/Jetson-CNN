@@ -19,8 +19,8 @@ def write_file(clazzes, boxes, paths, scores, labels):
             for clazz in clazzes:
                 left = int(boxes[i][0])
                 top = int(boxes[i][1])
-                right = int(boxes[i][2])
-                bottom = int(boxes[i][3])
+                right = int(boxes[i][0])+int(boxes[i][2])
+                bottom = int(boxes[i][1])+int(boxes[i][3])
                 name = labels[clazz]['name'].replace(' ', '-') #replace for mAP
                 string = "{} {} {} {} {}\n".format(name, left, top, right, bottom)
                 f.write(string)
@@ -28,11 +28,11 @@ def write_file(clazzes, boxes, paths, scores, labels):
         else: #If a predicted file
             for clazz in clazzes:
                 score = scores[i]
-                left = boxes[i][0]
-                top = boxes[i][1]
-                right = boxes[i][2]
-                bottom = boxes[i][3]
-                name = labels[clazz]['name']
+                left = int(boxes[i][0])
+                top = int(boxes[i][1])
+                right = int(boxes[i][0])+int(boxes[i][2])
+                bottom = int(boxes[i][1])+int(boxes[i][3])
+                name = labels[clazz]['name'].replace(' ', '-') #replace for mAP
                 string = "{} {} {} {} {} {}\n".format(name, score, left, top, right, bottom)
                 f.write(string)
                 i = i + 1
