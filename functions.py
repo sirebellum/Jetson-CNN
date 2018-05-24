@@ -33,7 +33,7 @@ def draw_labels(labels, classes, frame, boxes):
 
     return frame2
     
-def visualize(boxes, frame, scores, classes, labels):
+def visualize(boxes, frame, scores, classes, labels, threshold=0.9):
 
     good_boxes = list()
     good_classes = list()
@@ -42,7 +42,7 @@ def visualize(boxes, frame, scores, classes, labels):
        if scores is None: #draw all if scores is None
          good_boxes.append(box)
          good_classes.append(classes[i])
-       elif scores[i] >= 0.75:
+       elif scores[i] >= threshold:
          good_boxes.append(box)
          good_classes.append(classes[i])
        i = i + 1
