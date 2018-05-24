@@ -11,6 +11,7 @@ from COCO.COCO import crop_and_warp
 from COCO.COCOlite import dataset
 import visualization_utils as vis_utils #tensorflow provided vis tools
 import subprocess
+import time
 
 #DEBUG, INFO, WARN, ERROR, or FATAL
 tf.logging.set_verbosity(tf.logging.WARN)
@@ -44,14 +45,20 @@ def main(unused_argv):
   labels = get_labels() #maps id to name
   #GroundTruth
   image , gt_classes, gt_boxes, filename = COCO.nextImage()
-  while image is not None:
-
+  
+  total_time = 0
+  total_execs = 0
+  
+  try:
+    while image is not None:
       #EdgeBoxes
       edgearray = edgeGenerator.detectEdges(image)
       orientationarray = edgeGenerator.computeOrientation(edgearray)
       suppressed_edgearray = edgeGenerator.edgesNms(edgearray, orientationarray)
       boxes = boxGenerator.getBoundingBoxes(suppressed_edgearray, orientationarray)
 
+      b_time = time.time() #beginning time
+      
       #Create list of all objects, cropped and warped
       objects = list()
       for box in boxes:
@@ -72,6 +79,11 @@ def main(unused_argv):
 
           classes, scores = parse_predictions(predictions) #predictions is a weird object
           
+          exec_time = time.time()-b_time
+          print("Executed in:", exec_time) #execution time
+          total_time = total_time + exec_time
+          total_execs = total_execs + 1
+          
           mAP_paths = ["./mAP/", filename] #Path to mAP https://github.com/Cartucho/mAP
           write_file(gt_classes, gt_boxes, mAP_paths, None, labels) #write gt files
           write_file(classes, boxes, mAP_paths, scores, labels) #write predicted files
@@ -88,6 +100,9 @@ def main(unused_argv):
               
       #GroundTruth
       image , gt_classes, gt_boxes, filename = COCO.nextImage()
+  
+  except KeyboardInterrupt:
+      exit(total_time/total_execs)
   
 if __name__ == "__main__":
   tf.app.run()

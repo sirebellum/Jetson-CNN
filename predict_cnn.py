@@ -29,36 +29,51 @@ def main(unused_argv):
 
   labels = get_labels() #maps id to name
   receiver = receiverNetwork(9002) #receive from edgeboxes
-  while True:
-      #get image and boxes from network
-      image, boxes = receiver.receiveBoxes()
-      
-      #Create list of all objects, cropped and warped
-      objects = list()
-      for box in boxes:
-          object = crop_and_warp(image, box)
-          objects.append(object)
-      samples = np.array(objects, dtype=np.float32)
-      
-      #Input function with all objects in image
-      pred_input_fn = tf.estimator.inputs.numpy_input_fn(
-          x=samples,
-          num_epochs=1,
-          shuffle=False)
+  
+  total_time = 0
+  total_execs = 0
+  
+  try:
+      while True:
+          #get image and boxes from network
+          image, boxes = receiver.receiveBoxes()
+          
+          b_time = time.time() #beginning time
+          
+          #Create list of all objects, cropped and warped
+          objects = list()
+          for box in boxes:
+              object = crop_and_warp(image, box)
+              objects.append(object)
+          samples = np.array(objects, dtype=np.float32)
+          
+          #Input function with all objects in image
+          pred_input_fn = tf.estimator.inputs.numpy_input_fn(
+              x=samples,
+              num_epochs=1,
+              shuffle=False)
 
-      predictions = classifier.predict(
-          input_fn=pred_input_fn,
-          yield_single_examples=False)
-
-      classes, scores = parse_predictions(predictions)
-      
-      if args.vis == 'y':
-          image = image*255 #Convert to value in [0,255] for vis
-          image = image.astype(np.uint8)
-          image = visualize(boxes, image, scores, classes, labels)
+          predictions = classifier.predict(
+              input_fn=pred_input_fn,
+              yield_single_examples=False)
               
-          cv2.imshow("Image", image)
-          cv2.waitKey(10)
+          classes, scores = parse_predictions(predictions)
+          
+          exec_time = time.time()-b_time
+          print("Executed in:", exec_time) #execution time
+          total_time = total_time + exec_time
+          total_execs = total_execs + 1
+          
+          if args.vis == 'y':
+              image = image*255 #Convert to value in [0,255] for vis
+              image = image.astype(np.uint8)
+              image = visualize(boxes, image, scores, classes, labels)
+                  
+              cv2.imshow("Image", image)
+              cv2.waitKey(10)
+              
+  except KeyboardInterrupt:
+      exit(total_time/total_execs)
   
 if __name__ == "__main__":
   tf.app.run()
