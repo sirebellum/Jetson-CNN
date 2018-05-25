@@ -4,7 +4,8 @@ import cv2
 import math
 from multiprocessing import Process, Queue
 import tensorflow as tf
-from functions import crop_and_warp
+from functions import crop_and_warp, IoU
+import random
 
 class dataset:
 
@@ -15,7 +16,7 @@ class dataset:
         else: exit("invalid datatype (shoudl be test or train)")
 
         #Multithreading
-        self.num_threads = 4
+        self.num_threads = 7
         #Create an output and input queue for each thread
         self.queue = list()
         self.queuein = list()
@@ -92,20 +93,23 @@ class dataset:
         
         print(len(self.imgIds) - self.numImages, "images left.")
           
-        return images, np.asarray(labels, dtype=np.int64)
+        return images, np.asarray(labels, dtype=np.uint16)
 
 def parseImage(qin, q):
   while True:
     file = qin.get()
     annotations = qin.get()
     image = cv2.imread(file) #actual image
+    height, width, channels = image.shape
     #cv2.imshow("image", image)
     #cv2.waitKey(1)
     if image is None: exit("No image!")
     
     labels = list()
     images = list()
+    boxes = list()
     for ann in annotations: #get bounding boxes
+      boxes.append(ann['bbox'])
       object = crop_and_warp(image, ann['bbox'])
       
       if object.any(): #If not all zeroes
@@ -118,6 +122,31 @@ def parseImage(qin, q):
       #else:
         #cv2.imshow("suckage", object)
         #cv2.waitKey(1)
+        
+    #Generate boxes for random background objects
+    randos = np.empty((5, 4), dtype=np.uint16)
+    for rando in randos:
+      overlapping = True
+      while overlapping:
+        rando[0] = random.randint(0, width-1)
+        rando[1] = random.randint(0, height-1)
+        rando[2] = random.randint(1, width-rando[0])
+        rando[3] = random.randint(1, height-rando[1])
+        overlapping = False
+        for box in boxes: #check total overlap with actual objects
+            iou = IoU(rando, box)
+            if iou > 0.01:
+                overlapping = True
+                break
+            
+    #Add background objects to image list
+    for rando in randos:
+        object = crop_and_warp(image, rando)
+        encoded_object = cv2.imencode(".jpg", object)[1].tostring()
+        images.append(encoded_object)
+        labels.append(0)
+        cv2.imshow("image", object)
+        cv2.waitKey(1000)
 
     q.put(images)
     q.put(labels)

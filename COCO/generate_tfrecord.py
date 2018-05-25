@@ -37,8 +37,8 @@ def create_tf_example(encoded_jpg, label):
 def main(_):
     ###Create Train tfrecord###
     trainDataset = COCO.dataset('train')
-    num_objects = 2000
-    path_to_write = os.path.join(os.getcwd()) + '/train.record'
+    num_objects = 5000
+    path_to_write = os.path.join(os.getcwd()) + '/images/train.record'
     writer = tf.python_io.TFRecordWriter(path_to_write)
     
     train_data , train_labels = ([1], [1]) #start loop
@@ -55,8 +55,8 @@ def main(_):
 
     ###Create Test tfrecord###
     testDataset = COCO.dataset('test')
-    num_objects = 2000
-    path_to_write = os.path.join(os.getcwd()) + '/test.record'
+    num_objects = 5000
+    path_to_write = os.path.join(os.getcwd()) + '/images/test.record'
     writer = tf.python_io.TFRecordWriter(path_to_write)
     
     test_data , test_labels = ([1], [1]) #start loop
