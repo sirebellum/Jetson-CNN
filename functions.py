@@ -9,11 +9,11 @@ def crop_and_warp(image, box): #crop and warp image to box then 32x32
     cropped = image[ math.floor(box[1]):math.ceil(box[1]+box[3]),
                      math.floor(box[0]):math.ceil(box[0]+box[2]) ]
     warped = cv2.resize(cropped, (225, 225))
-    if not isinstance(warped[0][0][0], float): #freaks out if it's a float
-      warped = cv2.cvtColor(warped, cv2.COLOR_BGR2RGB)
+    #if not isinstance(warped[0][0][0], float): #freaks out if it's a float
+    #  warped = cv2.cvtColor(warped, cv2.COLOR_BGR2RGB)
     return warped
 
-def returnIoU(boxA, boxB):
+def IoU(boxA, boxB):
     #Convert xy coordinates
     boxA[2] = boxA[0] + boxA[2]
     boxA[3] = boxA[1] + boxA[3]
