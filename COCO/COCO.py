@@ -135,18 +135,19 @@ def parseImage(qin, q):
         overlapping = False
         for box in boxes: #check total overlap with actual objects
             iou = IoU(rando, box)
-            if iou > 0.01:
+            if iou > 0.1:
                 overlapping = True
                 break
             
     #Add background objects to image list
     for rando in randos:
         object = crop_and_warp(image, rando)
-        encoded_object = cv2.imencode(".jpg", object)[1].tostring()
-        images.append(encoded_object)
-        labels.append(0)
-        cv2.imshow("image", object)
-        cv2.waitKey(1000)
+        if object.any(): #if not all black
+            encoded_object = cv2.imencode(".jpg", object)[1].tostring()
+            images.append(encoded_object)
+            labels.append(0)
+        #cv2.imshow("image", object)
+        #cv2.waitKey(1000)
 
     q.put(images)
     q.put(labels)
