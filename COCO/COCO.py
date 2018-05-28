@@ -93,7 +93,7 @@ class dataset:
         
         print(len(self.imgIds) - self.numImages, "images left.")
           
-        return images, np.asarray(labels, dtype=np.uint16)
+        return images, np.asarray(labels, dtype=np.int64)
 
 def parseImage(qin, q):
   while True:
