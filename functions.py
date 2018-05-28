@@ -5,6 +5,89 @@ import pickle
 import numpy as np
 import math
 
+def prune_boxes(boxes, threshold, classes):
+    #Create dictionary of box indices corresponding to classes
+    boxes_with_class = {}
+    i = 0
+    for clas in classes:
+        if clas not in boxes_with_class.keys() and clas != 0: #ignore background objects
+            boxes_with_class[clas] = []
+        if clas != 0:
+            boxes_with_class[clas].append(i) #add index
+        i = i + 1
+
+    #Remove overlapping boxes of same class
+    good_boxes = list()
+    good_classes = list()
+    for id in boxes_with_class:
+        class_boxes = boxes[boxes_with_class[id]]
+        suppressed_boxes = non_max_suppression_fast(class_boxes, threshold)
+        for x in range(0, len(suppressed_boxes)):
+            good_classes.append(id)
+            good_boxes.append(suppressed_boxes[x])
+
+    return np.asarray(good_boxes, dtype=np.uint16), np.asarray(good_classes, dtype=np.uint8)
+
+# Malisiewicz et al.
+def non_max_suppression_fast(boxes, overlapThresh):
+    # if there are no boxes, return an empty list
+    if len(boxes) == 0:
+        return []
+ 
+    # if the bounding boxes integers, convert them to floats --
+    # this is important since we'll be doing a bunch of divisions
+    if boxes.dtype.kind == "i":
+        boxes = boxes.astype("float")
+ 
+    # initialize the list of picked indexes    
+    pick = []
+ 
+    # grab the coordinates of the bounding boxes
+    x1 = boxes[:,0]
+    y1 = boxes[:,1]
+    x2 = boxes[:,2]+boxes[:,0]
+    y2 = boxes[:,3]+boxes[:,1]
+ 
+    # compute the area of the bounding boxes and sort the bounding
+    # boxes by the bottom-right y-coordinate of the bounding box
+    area = (x2 - x1 + 1) * (y2 - y1 + 1)
+    idxs = np.argsort(y2)
+ 
+    # keep looping while some indexes still remain in the indexes
+    # list
+    while len(idxs) > 0:
+        # grab the last index in the indexes list and add the
+        # index value to the list of picked indexes
+        last = len(idxs) - 1
+        i = idxs[last]
+        pick.append(i)
+ 
+        # find the largest (x, y) coordinates for the start of
+        # the bounding box and the smallest (x, y) coordinates
+        # for the end of the bounding box
+        xx1 = np.maximum(x1[i], x1[idxs[:last]])
+        yy1 = np.maximum(y1[i], y1[idxs[:last]])
+        xx2 = np.minimum(x2[i], x2[idxs[:last]])
+        yy2 = np.minimum(y2[i], y2[idxs[:last]])
+ 
+        # compute the width and height of the bounding box
+        w = np.maximum(0, xx2 - xx1 + 1)
+        h = np.maximum(0, yy2 - yy1 + 1)
+ 
+        # compute the ratio of overlap
+        overlap = (w * h) / area[idxs[:last]]
+ 
+        # delete all indexes from the index list that have
+        idxs = np.delete(idxs, np.concatenate(([last],
+            np.where(overlap > overlapThresh)[0])))
+ 
+    # return only the bounding boxes that were picked using the
+    # integer data type
+    good_boxes = boxes[pick].astype("int")
+    good_boxes[:,2] = good_boxes[:,2]-good_boxes[:,0]
+    good_boxes[:,3] = good_boxes[:,3]-good_boxes[:,1]
+    return good_boxes
+
 def crop_and_warp(image, box): #crop and warp image to box then 32x32
     cropped = image[ math.floor(box[1]):math.ceil(box[1]+box[3]),
                      math.floor(box[0]):math.ceil(box[0]+box[2]) ]
@@ -142,8 +225,8 @@ def parse_predictions(predictions):
     #Flatten
     classes = [item for sublist in classes for item in sublist]
     #Convert to numpy
-    classes = np.asarray(classes)
-    scores = np.asarray(scores)
+    classes = np.asarray(classes, dtype=np.uint8)
+    scores = np.asarray(scores, dtype=np.float16)
     
     return classes, scores
     

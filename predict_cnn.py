@@ -6,7 +6,7 @@ import tensorflow as tf
 from cnn_models import CNN_Model
 cnn_model = CNN_Model #which model to use
 import cv2
-from functions import receiverNetwork, draw_boxes, parse_predictions, get_labels, visualize, crop_and_warp
+from functions import receiverNetwork, draw_boxes, parse_predictions, get_labels, visualize, prune_boxes, crop_and_warp
 import visualization_utils as vis_utils #tensorflow provided vis tools
 import time
 
@@ -58,6 +58,9 @@ def main(unused_argv):
               
           classes, scores = parse_predictions(predictions)
           
+          #Get rid of 0 objects and merge iou threshold
+          boxes, classes = prune_boxes(boxes, 0.5, classes)
+
           exec_time = time.time()-b_time
           print("Executed in:", exec_time) #execution time
           total_time = total_time + exec_time
