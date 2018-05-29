@@ -5,7 +5,7 @@ import pickle
 import numpy as np
 import math
 
-def prune_boxes(boxes, threshold, classes):
+def prune_boxes(boxes, threshold, classes, scores):
     #Create dictionary of box indices corresponding to classes
     boxes_with_class = {}
     i = 0
@@ -19,17 +19,23 @@ def prune_boxes(boxes, threshold, classes):
     #Remove overlapping boxes of same class
     good_boxes = list()
     good_classes = list()
+    good_scores = list()
     for id in boxes_with_class:
         class_boxes = boxes[boxes_with_class[id]]
-        suppressed_boxes = non_max_suppression_fast(class_boxes, threshold)
+        class_scores = scores[boxes_with_class[id]]
+        suppressed_boxes, sscores = non_max_suppression_fast(class_boxes, threshold, class_scores)
         for x in range(0, len(suppressed_boxes)):
             good_classes.append(id)
             good_boxes.append(suppressed_boxes[x])
+            good_scores.append(0.7)
 
-    return np.asarray(good_boxes, dtype=np.uint16), np.asarray(good_classes, dtype=np.uint8)
+    boxes = np.asarray(good_boxes, dtype=np.uint16)
+    classes = np.asarray(good_classes, dtype=np.uint8)
+    scores = np.asarray(good_scores, dtype=np.float16)
+    return boxes, classes, scores
 
 # Malisiewicz et al.
-def non_max_suppression_fast(boxes, overlapThresh):
+def non_max_suppression_fast(boxes, overlapThresh, scores):
     # if there are no boxes, return an empty list
     if len(boxes) == 0:
         return []
@@ -84,9 +90,10 @@ def non_max_suppression_fast(boxes, overlapThresh):
     # return only the bounding boxes that were picked using the
     # integer data type
     good_boxes = boxes[pick].astype("int")
+    good_scores= scores[pick].astype("int")
     good_boxes[:,2] = good_boxes[:,2]-good_boxes[:,0]
     good_boxes[:,3] = good_boxes[:,3]-good_boxes[:,1]
-    return good_boxes
+    return good_boxes, good_scores
 
 def crop_and_warp(image, box): #crop and warp image to box then 32x32
     cropped = image[ math.floor(box[1]):math.ceil(box[1]+box[3]),
@@ -189,7 +196,7 @@ def draw_labels(labels, classes, frame, boxes):
 
     return frame2
     
-def visualize(boxes, frame, scores, classes, labels, threshold=0.9):
+def visualize(boxes, frame, scores, classes, labels, threshold=0.7):
 
     good_boxes = list()
     good_classes = list()
