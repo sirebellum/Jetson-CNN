@@ -59,7 +59,7 @@ def main(unused_argv):
           classes, scores = parse_predictions(predictions)
           
           #Get rid of 0 objects and merge iou threshold
-          boxes, classes = prune_boxes(boxes, 0.5, classes)
+          boxes, classes, scores = prune_boxes(boxes, 0.7, classes, scores)
 
           exec_time = time.time()-b_time
           print("Executed in:", exec_time) #execution time
