@@ -48,7 +48,8 @@ def main(unused_argv):
       print("Evaluating...")
       eval_results = classifier.evaluate(input_fn=eval_input_fn)
       print(eval_results)
-      cli_arg = 0 #don't run immediately again
+    if cli_arg:
+      break
   
 if __name__ == "__main__":
   tf.app.run()
