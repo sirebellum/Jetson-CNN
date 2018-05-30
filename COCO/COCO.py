@@ -7,13 +7,18 @@ import tensorflow as tf
 from functions import crop_and_warp, IoU
 import random
 
+'''
+Class that loads COCO annotations into memory.
+Returns an arbitrary number of objects cropped
+and warped from image using annotations.
+'''
 class dataset:
 
     def __init__(self, data):
     
         if data == 'train': self.dataType = 'train2017'
         elif data == 'test': self.dataType = 'val2017'
-        else: exit("invalid datatype (shoudl be test or train)")
+        else: exit("invalid datatype (should be 'test' or 'train')")
 
         #Multithreading
         self.num_threads = 7
@@ -58,7 +63,8 @@ class dataset:
         for x in range(self.numImages, len(self.imgIds), self.num_threads):
           for thread in range(0, self.num_threads):
 
-            if x+thread >= len(self.imgIds): #if no more images,
+            #Check if we've exceeded the # of images
+            if x+thread >= len(self.imgIds):
               for i in range(0, thread-1):  #purge queues and break
                 images = images + self.queue[i].get()
                 labels = labels + self.queue[i].get()
@@ -66,6 +72,7 @@ class dataset:
               print(len(images), "objects warped")
               self.numImages = self.numImages + thread - 1
               return images, np.asarray(labels, dtype=np.int64)
+            
             
             #Retrieve image location
             img = self.coco_handle.loadImgs(self.imgIds[x+thread])[0] #image descriptor

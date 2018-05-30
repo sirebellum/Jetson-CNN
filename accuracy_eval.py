@@ -6,11 +6,8 @@ import tensorflow as tf
 from cnn_models import CNN_Model
 cnn_model = CNN_Model #which model to use
 import cv2
-from functions import receiverNetwork, draw_boxes, parse_predictions, get_labels, visualize, write_file, prune_boxes
-from COCO.COCO import crop_and_warp
+from functions import receiverNetwork, parse_predictions, get_labels, visualize, write_file, prune_boxes, crop_and_warp
 from COCO.COCOlite import dataset
-import visualization_utils as vis_utils #tensorflow provided vis tools
-import subprocess
 import time
 
 #DEBUG, INFO, WARN, ERROR, or FATAL
@@ -42,9 +39,9 @@ def main(unused_argv):
     model_fn=cnn_model,
     model_dir=model_path)
     
-  labels = get_labels() #maps id to name
+  labels = get_labels() #maps id ints to name
 
-  
+  #Variables to track performance
   total_time = 0
   total_execs = 0
   
@@ -52,7 +49,7 @@ def main(unused_argv):
     #GroundTruth
     image , gt_classes, gt_boxes, filename = COCO.nextImage()
     while image is not None:
-      #EdgeBoxes
+      #EdgeBoxes, generate bounding boxes
       edgearray = edgeGenerator.detectEdges(image)
       orientationarray = edgeGenerator.computeOrientation(edgearray)
       suppressed_edgearray = edgeGenerator.edgesNms(edgearray, orientationarray)
@@ -74,25 +71,30 @@ def main(unused_argv):
               num_epochs=1,
               shuffle=False)
 
+          #Perform prediction
           predictions = classifier.predict(
               input_fn=pred_input_fn,
               yield_single_examples=False)
 
-          classes, scores = parse_predictions(predictions) #predictions is a weird object
+          #predictions is a weird object
+          classes, scores = parse_predictions(predictions)
           
           #Get rid of overlapping boxes with iou threshold
           iou_threshold = 0.5
           boxes, classes, scores = prune_boxes(boxes, iou_threshold, classes, scores)
           
+          #Performance metrics
           exec_time = time.time()-b_time
           print("Executed in:", exec_time) #execution time
           total_time = total_time + exec_time
           total_execs = total_execs + 1
           
+          #Write files for mAP calculations
           mAP_paths = ["./mAP/", filename] #Path to mAP https://github.com/Cartucho/mAP
           write_file(gt_classes, gt_boxes, mAP_paths, None, labels) #write gt files
           write_file(classes, boxes, mAP_paths, scores, labels) #write predicted files
           
+          #Visualizations
           if args.vis == 'y':
               image = image*255 #Convert to value in [0,255] for vis
               image = image.astype(np.uint8)
@@ -103,7 +105,7 @@ def main(unused_argv):
               cv2.imshow("image", image)
               cv2.waitKey(1000)
               
-      #GroundTruth
+      #Retrieve next set of images and annotations
       image , gt_classes, gt_boxes, filename = COCO.nextImage()
   
   except KeyboardInterrupt:

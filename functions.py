@@ -5,6 +5,8 @@ import pickle
 import numpy as np
 import math
 
+#Function that removes background objects and removes
+#overlapping boxes with same class
 def prune_boxes(boxes, threshold, classes, scores):
     #Create dictionary of box indices corresponding to classes
     boxes_with_class = {}
@@ -51,7 +53,7 @@ def non_max_suppression_fast(boxes, overlapThresh, scores):
     # grab the coordinates of the bounding boxes
     x1 = boxes[:,0]
     y1 = boxes[:,1]
-    x2 = boxes[:,2]+boxes[:,0]
+    x2 = boxes[:,2]+boxes[:,0] #convert coordinates
     y2 = boxes[:,3]+boxes[:,1]
  
     # compute the area of the bounding boxes and sort the bounding
@@ -95,7 +97,7 @@ def non_max_suppression_fast(boxes, overlapThresh, scores):
     good_boxes[:,3] = good_boxes[:,3]-good_boxes[:,1]
     return good_boxes, good_scores
 
-def crop_and_warp(image, box): #crop and warp image to box then 32x32
+def crop_and_warp(image, box): #crop and warp image to box
     cropped = image[ math.floor(box[1]):math.ceil(box[1]+box[3]),
                      math.floor(box[0]):math.ceil(box[0]+box[2]) ]
     warped = cv2.resize(cropped, (225, 225))
@@ -132,6 +134,7 @@ def IoU(boxA, boxB):
     # return the intersection over union value
     return iou
 
+#Write file for use with mAP calculations
 def write_file(clazzes, boxes, paths, scores, labels):
 
     filename = paths[1].strip(".jpg")+".txt" #write txt not jpg
@@ -167,6 +170,7 @@ def write_file(clazzes, boxes, paths, scores, labels):
         else:
             i = i + 1
 
+#Draw bounding boxes on image
 def draw_boxes(boxes, frame):
     frame2 = frame.copy()
 
@@ -179,6 +183,7 @@ def draw_boxes(boxes, frame):
 
     return frame2
 
+#Draw class lables on image
 def draw_labels(labels, classes, frame, boxes):
     frame2 = frame.copy()
     
@@ -195,7 +200,9 @@ def draw_labels(labels, classes, frame, boxes):
         i = i + 1
 
     return frame2
-    
+
+#Use other functions to draw boxes and labels on image
+#Only draws those objects that are above score threshold
 def visualize(boxes, frame, scores, classes, labels, threshold=0.7):
 
     good_boxes = list()
@@ -214,6 +221,7 @@ def visualize(boxes, frame, scores, classes, labels, threshold=0.7):
     image = draw_labels(labels, good_classes, image, good_boxes)
     return image
     
+#Predictions is a weird object, so this parses it
 def parse_predictions(predictions):
 
     scores = list()
@@ -237,6 +245,7 @@ def parse_predictions(predictions):
     
     return classes, scores
     
+#Get human readable labels that match int ids from file
 def get_labels():
 
     labels = list()
@@ -254,6 +263,7 @@ def get_labels():
     
     return category_index
 
+#Reveive boxes and frame from EdgeBoxes
 class receiverNetwork:
 
     def __init__(self, port):

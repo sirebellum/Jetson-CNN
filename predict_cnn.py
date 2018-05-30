@@ -7,7 +7,6 @@ from cnn_models import CNN_Model
 cnn_model = CNN_Model #which model to use
 import cv2
 from functions import receiverNetwork, draw_boxes, parse_predictions, get_labels, visualize, prune_boxes, crop_and_warp
-import visualization_utils as vis_utils #tensorflow provided vis tools
 import time
 
 #DEBUG, INFO, WARN, ERROR, or FATAL
