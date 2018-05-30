@@ -6,7 +6,7 @@ import tensorflow as tf
 from cnn_models import CNN_Model
 cnn_model = CNN_Model #which model to use
 import cv2
-from functions import receiverNetwork, draw_boxes, parse_predictions, get_labels, visualize, write_file
+from functions import receiverNetwork, draw_boxes, parse_predictions, get_labels, visualize, write_file, prune_boxes
 from COCO.COCO import crop_and_warp
 from COCO.COCOlite import dataset
 import visualization_utils as vis_utils #tensorflow provided vis tools
@@ -79,6 +79,10 @@ def main(unused_argv):
               yield_single_examples=False)
 
           classes, scores = parse_predictions(predictions) #predictions is a weird object
+          
+          #Get rid of overlapping boxes with iou threshold
+          iou_threshold = 0.5
+          boxes, classes, scores = prune_boxes(boxes, iou_threshold, classes, scores)
           
           exec_time = time.time()-b_time
           print("Executed in:", exec_time) #execution time
